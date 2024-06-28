@@ -1,0 +1,551 @@
+{% extends "base.html" %}
+{% load static %}
+  
+{% block content %}
+    <div class="main-content">
+        <form id="memberForm" style="margin-top: 10px; margin-left: 10px;">
+            {% csrf_token %}
+            <div class="container-fluid">
+                <h2 class="title-large">Editar Miembro</h2>
+                <hr style="background-color: black; height: 3px;">
+    
+                <!-- Adjusted Wrapper container for horizontal layout with border -->
+                <div class="wrapper-container" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; padding: 10px;">
+    
+                    <!-- Left-side container for frames and buttons with border -->
+                    <div class="left-container" style="display: flex; flex-direction: row; justify-content: space-around; width: 50%;">
+                        <!-- Image frame and button group 1 -->
+                        <div class="image-frame-holder" style="text-align: center;">
+                            <img id="miembro_image" src="{{ form.instance.foto.url }}" class="image-frame" style="display: block; margin: auto; border-radius: 10px; width: 200px; height: 150px;">
+                            <button type="button" class="btn btn-primary btn-secondary-action mt-2" data-bs-toggle="modal" data-bs-target="#cameraModal">
+                                Editar
+                                <i class="fa-solid fa-camera"></i>
+                            </button>
+                            <input type="hidden" name="image_data" value="">
+                            <!-- Disabled Input Field -->
+                            <input type="text" style="max-width: 200px; margin-top: 10px;" disabled placeholder="Dirección Foto" class="form-control" value="{{ form.instance.foto.url }}">
+                        </div>
+    
+                        <!-- Image frame and button group 2 -->
+                        <div class="image-frame-holder" style="text-align: center;">
+                            <img src="{% static 'images/fingerprint2.png' %}" class="image-frame" style="display: block; margin: auto; border-radius: 10px; width: 150px; height: 150px;">
+                            <button type="button" class="btn btn-primary btn-secondary-action mt-2" data-bs-toggle="modal" data-bs-target="#fingerprintModal">
+                                <i class="bi bi-fingerprint"></i>
+                                Registrar Huella
+                                <i class="fa-solid fa-fingerprint"></i>
+                            </button>
+                            <input id="fingerprint_data" type="hidden" name="fingerprint_data" value="">
+                            <!-- Disabled Input Field -->
+                            <input id="miembro_fingerprint" type="text" style="max-width: 200px; margin-top: 10px;" disabled placeholder="Dirección Huella" class="form-control" value="{{ form.instance.huella_dactilar }}">
+                        </div>
+                    </div>
+    
+                    <!-- Right-side container for the table with border -->
+                    <div class="table-responsive" style="flex: 1; max-width: 50%; border-radius: 10px; max-height: 300px; overflow-y: auto;">
+                        <table class="table table-light table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Descripción</th>
+                                    <th>Cantidad</th>
+                                    <th>Método de Pago</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transaccion in form.instance.pagos.all %}
+                                <tr>
+                                    <td>{{ transaccion.fecha }}</td>
+                                    <td>{{ transaccion.descripcion }}</td>
+                                    <td>{{ transaccion.cantidad }}</td>
+                                    <td>{{ transaccion.metodo_pago }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4">No hay transacciones registradas.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nombre & Apellido -->
+            <div class="row g-2 mb-4">
+                <div class="col-auto form-floating me-5">
+                    <input type="text" class="form-control" id="nombreValue" placeholder="Nombre Miembro" name="nombre" value="{{ form.instance.nombres }}">
+                    <label for="nombreValue">Nombre *</label>
+                </div>
+                <div class="col-md-4 form-floating">
+                    <input type="text" class="form-control" id="apellidosValue" placeholder="Apellidos Miembro" name="apellidos" value="{{ form.instance.apellidos }}">
+                    <label for="apellidosValue">Apellidos *</label>
+                </div>
+            </div>
+            
+            <!-- Identificación & Fecha de Nacimiento -->
+            <div class="row g-2 mb-4">
+                <div class="col-auto form-floating me-5">
+                    <input type="date" class="form-control" id="fechaNacimientoValue" name="fechaNacimiento" placeholder="Fecha de nacimiento" value="{{ form.instance.fecha_inicio_membresia|date:'Y-m-d' }}">
+                    <label for="fechaNacimientoValue">Fecha de nacimiento</label>
+                </div>
+                <div class="col-auto form-floating">
+                    <input type="text" class="form-control" id="miembro_id" placeholder="id" name="miembro_id" value="{{ form.instance.id }}" disabled>
+                    <label for="miembro_id">ID</label>
+                </div>
+            </div>
+
+            <!-- Sexo & Teléfono -->
+            <div class="row g-2 mb-4">
+                <div class="col-auto form-floating me-5">
+                    <select class="form-select col-auto" id="genSelect" name="sexo">
+                        <option value="H" {% if miembro.sexo == "H" %}selected{% endif %}>Hombre</option>
+                        <option value="M" {% if miembro.sexo == "M" %}selected{% endif %}>Mujer</option>
+                        <option value="N" {% if miembro.sexo == "N" %}selected{% endif %}>No especificar</option>
+                    </select>
+                    
+                    <label for="genSelect">Sexo</label>
+                </div>
+                <div class="col-md-4 form-floating">
+                    <input type="tel" class="form-control" id="telefonoValue" name="telefono" placeholder="Teléfono" value="{{ form.instance.telefono }}">
+                    <label for="telefonoValue">Teléfono</label>
+                </div>
+            </div>
+
+            <!-- Email & Tipo de Sangre -->
+            <div class="row g-2 mb-4">
+                <div class="col-md-4 form-floating me-5">
+                    <input type="email" class="form-control" id="emailValue" name="email" placeholder="Email Miembro" value="{{ form.instance.email }}">
+                    <label for="emailValue">Email *</label>
+                </div>
+                <div class="col-auto form-floating">
+                    <select class="form-select" id="sangreSelect" name="tipoSangre">
+                        <option value="" {% if not miembro.tipo_sangre %}selected{% endif %}>Seleccionar...</option>
+                        <option value="A+" {% if miembro.tipo_sangre == "A+" %}selected{% endif %}>A+</option>
+                        <option value="A-" {% if miembro.tipo_sangre == "A-" %}selected{% endif %}>A-</option>
+                        <option value="B+" {% if miembro.tipo_sangre == "B+" %}selected{% endif %}>B+</option>
+                        <option value="B-" {% if miembro.tipo_sangre == "B-" %}selected{% endif %}>B-</option>
+                        <option value="AB+" {% if miembro.tipo_sangre == "AB+" %}selected{% endif %}>AB+</option>
+                        <option value="O+" {% if miembro.tipo_sangre == "O+" %}selected{% endif %}>O+</option>
+                        <option value="O-" {% if miembro.tipo_sangre == "O-" %}selected{% endif %}>O-</option>
+                    </select>                    
+                    <label for="sangreSelect">Tipo de Sangre</label>
+                </div>
+            </div>
+
+            <!-- Contacto de Emergencia -->
+            <div class="row g-2 mb-4">
+                <div class="col-md-4 form-floating me-5">
+                    <input type="text" class="form-control" id="contEmergValue" name="contactoEmergencia" placeholder="Contacto de Emergencia" value="{{ form.instance.contacto_emergencia }}">
+                    <label for="contEmergValue">Contacto de Emergencia *</label>
+                </div>
+                <div class="col-md-4 form-floating">
+                    <input type="tel" class="form-control" id="telEmergValue" name="telefonoEmergencia" placeholder="Teléfono de Emergencia" value="{{ form.instance.telefono_emergencia }}">
+                    <label for="telEmergValue">Teléfono de Emergencia *</label>
+                </div>
+            </div>
+
+            <!-- Condiciones Médicas -->
+            <div class="mb-4 form-floating">
+                <textarea class="form-control" id="condMed" name="condicionesMedicas" placeholder="Condiciones Médicas Especiales" style="height: 200px" value="">{{ form.instance.condiciones_medicas }}</textarea>
+                <label for="condMed">Condiciones Médicas</label>
+            </div>
+            <hr style="background-color: black; height: 3px;">
+            <h4 class="title">Estatus membresia</h2>
+            &nbsp
+            <div class="row g-2 mb-4">
+                <div class="col-auto form-floating">
+                    <input type="date" class="form-control" id="fechaInicioValue" name="fechaInicio" placeholder="Fecha de inicio" value="{{ form.instance.fecha_inicio_membresia|date:'Y-m-d' }}" disabled>
+                    <label for="fechaNacimientoValue">Fecha de inicio</label>
+                </div>
+                <div class="col-auto form-floating">
+                    <input type="date" class="form-control" id="fechaFinValue" name="fechaFin" placeholder="Fecha de fin" value="{{ form.instance.fecha_fin_membresia|date:'Y-m-d' }}" disabled>
+                    <label for="fechaNacimientoValue">Fecha de Fin</label>
+                </div>
+            </div>
+            <div class="row g-2 mb-4">
+                <p style="display: inline; font-size: 16px;">Estatus Membresia: <span style="font-size: 20px" class='badge rounded-pill bg-success'>{{ form.instance.estatus_membresia}}</span></p>
+
+            </div>
+
+
+        </form>
+        <!-- Modal -->
+        <div class="modal fade" id="cameraModal" tabindex="-1" aria-labelledby="cameraModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="cameraModalLabel">Tomar Foto</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <video id="video" width="100%" autoplay></video>
+                        <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="snap" class="btn btn-primary">Capturar</button>
+                        <button type="button" id="repeat" class="btn btn-secondary">Repetir</button>
+                        <button type="button" id="accept" class="btn btn-success" disabled>Aceptar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal -->
+        <div class="modal fade" id="fingerprintModal" tabindex="-1" aria-labelledby="fingerprintModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="fingerprintModalLabel">Registro de Huella Digital</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Fila con flexbox para centrar todo el contenido -->
+                        <div class="row justify-content-center align-items-center">
+                            <!-- Columna para la imagen, usa 'col-auto' para que ajuste su ancho al contenido -->
+                            <div class="col-auto">
+                                <img src="{% static 'images/fingerprint2.png' %}" alt="Fingerprint" style="width: 100px; height: auto;">
+                            </div>
+                            <!-- Columna para los iconos, también 'col-auto' -->
+                            <div class="col-auto">
+                                <!-- Contenedor para los iconos de estado de registro -->
+                                <div class="d-flex flex-wrap justify-content-center" id="iconFinger">
+                                    <!-- Iconos de FontAwesome -->
+                                    <i class="icon far fa-times-circle fa-2x mx-1 my-1" id="iconFinger1"></i>
+                                    <i class="icon far fa-times-circle fa-2x mx-1 my-1" id="iconFinger2"></i>
+                                    <i class="icon far fa-times-circle fa-2x mx-1 my-1" id="iconFinger3"></i>
+                                </div>
+                            </div>
+                        </div>
+                        &nbsp;
+                        <div class="row justify-content-center align-items-center">
+                            Pide al miembro colocar su dedo en el sensor 3 veces
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-center align-items-center">
+                        <button id="startRegistration" class="btn btn-primary">
+                            Registrar
+                            <i class="fas fa-fingerprint"></i>
+                        </button>
+                        <button id="resetRegistration" class="btn btn-warning" disabled>
+                            Reiniciar
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </button>
+                        <button id="saveFingerprint" class="btn btn-success" disabled>
+                            Guardar
+                            <i class="fas fa-save"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>    
+
+        <!-- Button Container for aligning buttons outside and below the form -->
+        <div style="text-align: right;">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <!-- "Anterior" Button aligned to the left -->
+                <a href="{% url 'miembros:lista_miembros' %}" class="btn btn-primary btn-secondary-action" onclick="return confirm('¿Estás seguro de que quieres regresar? Los datos no guardados se perderán.');">
+                    <i class="fa-solid fa-backward"></i> Regresar
+                </a>
+                <!-- Container for right-aligned elements -->
+                <div style="display: flex; align-items: center; gap: 10px">
+
+                    <!-- boton renovar membresía -->
+                    <button type="button" onclick="window.location.href='{% url 'miembros:renovar_actividad' miembro_id=miembro.id %}'" class="btn btn-primary-action" style="color: black; white-space: nowrap; min-width: 140px;">
+                        Renovar Membresía
+                        <i class="fa-solid fa-repeat"></i>
+                    </button>
+                    
+                    <!-- "boton Guardar Cambios -->
+                    <button type="button" id="btnGuardar" class="btn btn-primary-action" style="color: black; white-space: nowrap; min-width: 140px;">
+                        Guardar Cambios <i class="fa-solid fa-floppy-disk"></i>
+                    </button>
+                </div>
+            </div>
+        </div>      
+    </div>    
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Obtén la URL actual sin el dominio
+            const path = window.location.pathname;
+    
+            // Selecciona el enlace por su clase
+            const miembrosLink = document.querySelector('.members');
+    
+            // Verifica si la URL actual contiene el path del enlace de acceso
+            miembrosLink.classList.add('active');
+
+            var video = document.getElementById('video');
+            var canvas = document.getElementById('canvas');
+            var context = canvas.getContext('2d');
+            var snapButton = document.getElementById('snap');
+            var repeatButton = document.getElementById('repeat');
+            var acceptButton = document.getElementById('accept');
+            var stream = null;  // Referencia al stream de video
+        
+            // Iniciar la webcam cuando el modal se abre
+            $('#cameraModal').on('show.bs.modal', function (e) {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(function(s) {
+                        stream = s;
+                        video.srcObject = stream;
+                        video.play();
+                        // Reiniciar el estado de los botones cada vez que se abre el modal
+                        snapButton.disabled = false;
+                        acceptButton.disabled = true;
+                        repeatButton.disabled = true;
+                    })
+                    .catch(function(err) {
+                        console.log("An error occurred: " + err);
+                    });
+            });
+        
+            // Detener la webcam cuando el modal se cierra
+            $('#cameraModal').on('hidden.bs.modal', function (e) {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+                // Limpia el canvas y los datos de imagen cada vez que se cierra el modal
+                context.clearRect(0, 0, canvas.width, canvas.height);
+            });
+        
+            // Capturar la foto
+            snapButton.addEventListener("click", function() {
+                // Ajustar el tamaño del canvas al del video.
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+        
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                var imageDataUrl = canvas.toDataURL('image/png'); // Convierte a base64.
+        
+                var imageDataField = document.querySelector('input[name="image_data"]');
+                if (imageDataField) {
+                    imageDataField.value = imageDataUrl; // Asigna a campo oculto.
+                } else {
+                    console.error('El campo oculto para la imagen no se encontró.');
+                }
+        
+                acceptButton.disabled = false; // Habilita botón Aceptar.
+                repeatButton.disabled = false; // Habilita botón Repetir.
+                snapButton.disabled = true; // Deshabilita botón Capturar.
+        
+                video.style.display = 'none'; // Oculta el video.
+                canvas.style.display = 'block'; // Muestra el canvas.
+        
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop()); // Detiene la webcam.
+                }
+            });
+        
+            // Repetir la captura
+            repeatButton.addEventListener("click", function() {
+                context.clearRect(0, 0, canvas.width, canvas.height); // Limpia el canvas.
+                video.style.display = 'block'; // Muestra el video.
+                canvas.style.display = 'none'; // Oculta el canvas.
+        
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(function(s) {
+                        stream = s;
+                        video.srcObject = stream;
+                        video.play();
+        
+                        snapButton.disabled = false; // Habilita botón Capturar.
+                        acceptButton.disabled = true; // Deshabilita botón Aceptar hasta nueva captura.
+                        repeatButton.disabled = true; // Deshabilita botón Repetir hasta capturar.
+                    })
+                    .catch(function(err) {
+                        console.log("An error occurred: " + err);
+                    });
+            });
+        
+        
+            // Aceptar la foto capturada
+            acceptButton.addEventListener("click", function() {
+                var imageDataUrl = canvas.toDataURL('image/png'); // Asegúrate de que este es el canvas donde se captura la foto
+                var csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+                var miembroId = document.getElementById('miembro_id').value; // Asumiendo que tienes un input con el ID del miembro
+            
+                // Utiliza jQuery AJAX
+                $.ajax({
+                    url: '/miembros/actualizar_imagen/', // Reemplaza con la ruta correcta a tu vista Django
+                    type: 'POST',
+                    data: {
+                        csrfmiddlewaretoken: csrftoken,
+                        image_data: imageDataUrl,
+                        miembro_id: miembroId // Envía el ID del miembro
+                    },
+                    success: function(data) {
+                        // Si todo sale bien, actualiza la imagen en la interfaz
+                        if(data.success) {
+                            document.querySelector('#miembro_image').src = data.new_image_url;
+                            $('#cameraModal').modal('hide'); // Oculta el modal después de guardar
+                        } else {
+                            console.error('Hubo un error al guardar la imagen');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                    }
+                });
+            });
+
+            // Modal Fingerprint
+            document.getElementById('startRegistration').addEventListener('click', function() {
+                // Deshabilita el botón de Iniciar Registro para evitar múltiples clics
+                this.disabled = true;
+                // Realiza la solicitud AJAX al servidor para iniciar el registro de la huella
+                startFingerprintRegistration();
+            });
+
+            function startFingerprintRegistration() {
+                $.ajax({
+                    url: "/miembros/registro-huella/",
+                    method: "POST",
+                    data: {
+                        csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+                        reset: false,
+                    },
+                    dataType: "json",
+                    success: function(response) {
+                        if (response.success) {
+                            // Actualiza los iconos de estado según la cantidad de huellas registradas
+                            updateRegistrationIcons(response.registeredCount);
+                            console.log(response.registeredCount)
+                            {% comment %} document.getElementById('resetRegistration').disabled = false; {% endcomment %}
+                            if(response.registeredCount < 3) {
+                                // Continúa con el proceso de registro si aún no se han capturado 4 huellas
+                                startFingerprintRegistration();
+                            } else {
+                                $('input[name="fingerprint_data"]').val(response.final_template);
+                                document.getElementById('saveFingerprint').disabled = false;
+                            }
+                        } else {
+                            // Manejar errores o fallos en la captura
+                            console.log('Fallo en la captura');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("ERROR en la solicitud:", error);
+                    },
+                });
+            }
+            
+            function updateRegistrationIcons(registeredCount) {
+                // Actualiza los iconos de registro según cuántas huellas se han registrado exitosamente
+                let icons = document.querySelectorAll('#iconFinger .icon');
+                console.log(icons)
+                icons.forEach((icon, index) => {
+                    if(index < registeredCount) {
+                        icon.className = 'icon fa-solid fa-check fa-2x mx-1 my-1';
+                        console.log('si entre')
+                    } else {
+                        icon.className = 'icon far fa-times-circle fa-2x mx-1 my-1';
+                        console.log('no entre')
+                    }
+                });
+            }
+
+            document.getElementById('resetRegistration').addEventListener('click', function() {
+                this.disabled = true; // "this" se refiere al botón de Reiniciar
+                $.ajax({
+                    url: "/miembros/registro-huella/", // URL para reiniciar la captura de huella
+                    method: "POST",
+                    data: {
+                        csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+                        reset: true,
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Reinicia los iconos a su estado original
+                            resetRegistrationIcons();
+                            
+                            // Habilita el botón de Iniciar Registro
+                            document.getElementById('startRegistration').disabled = false;
+                            
+                            // Deshabilita los botones de Guardar y Reiniciar hasta que se inicie un nuevo registro
+                            document.getElementById('saveFingerprint').disabled = true;
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("ERROR en la solicitud de reset:", error);
+                    },
+                });
+            });
+            
+            function resetRegistrationIcons() {
+                let icons = document.querySelectorAll('#iconFinger .icon');
+                icons.forEach((icon) => {
+                    icon.className = 'icon far fa-times-circle fa-2x mx-1 my-1';
+                });
+            }
+            
+            document.getElementById('saveFingerprint').addEventListener('click', function() {
+                var csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+                var miembroId = document.getElementById('miembro_id').value; // Asumiendo que tienes un input con el ID del miembro
+                var fingerprint_data = document.getElementById('fingerprint_data').value; // Asumiendo que tienes un input con el ID del miembro
+            
+                // Utiliza jQuery AJAX
+                $.ajax({
+                    url: '/miembros/actualizar_fingerprint/', // Reemplaza con la ruta correcta a tu vista Django
+                    type: 'POST',
+                    data: {
+                        csrfmiddlewaretoken: csrftoken,
+                        fingerprint_data: fingerprint_data,
+                        miembro_id: miembroId // Envía el ID del miembro
+                    },
+                    success: function(data) {
+                        // Si todo sale bien, actualiza la imagen en la interfaz
+                        if(data.success) {
+                            document.querySelector('#miembro_fingerprint').value = fingerprint_data;
+                            $('#fingerprintModal').modal('hide'); // Oculta el modal después de guardar
+                        } else {
+                            console.error('Hubo un error al guardar la imagen');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                    }
+                });
+            }); 
+
+            document.getElementById('btnGuardar').addEventListener('click', guardarCambios);
+
+            function guardarCambios() {
+                var csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+                var miembroId = document.getElementById('miembro_id').value; // Asumiendo que tienes un input con el ID del miembro
+                var formData = {
+                    'nombre': $('#nombreValue').val(),
+                    'apellidos': $('#apellidosValue').val(),
+                    'fechaNacimiento': $('#fechaNacimientoValue').val(),
+                    'sexo': $('#genSelect').val(),
+                    'telefono': $('#telefonoValue').val(),
+                    'email': $('#emailValue').val(),
+                    'sangre': $('#sangreSelect').val(),
+                    'contactoEmergencia': $('#contEmergValue').val(),
+                    'telEmergencia': $('#telEmergValue').val(),
+                    'condiciones': $('#condMed').val(),
+                    
+                };
+                
+                console.log(formData)
+           
+                $.ajax({
+                    url: `/miembros/actualizar/${miembroId}/`,
+                    type: 'POST',
+                    data: formData,
+                    headers: {'X-CSRFToken': csrftoken},
+                    success: function(data) {
+                        if(data.success) {
+                            alert(data.message); // Muestra un mensaje de éxito
+                            location.reload(); // O recarga la página para ver los cambios
+                        } else {
+                            alert(data.message); // Muestra un mensaje de error
+                        }
+                    },
+                    error: function(xhr, errmsg, err) {
+                        console.log(xhr.status + ": " + xhr.responseText); // Proporciona un poco más de información sobre el error
+                    }
+                });
+            }            
+        });
+    </script>
+{% endblock  %}

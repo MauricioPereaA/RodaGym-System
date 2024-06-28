@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+  
+{% block content %}
+<div class="main-content">
+    <div class="container-fluid">
+        <h2 class="title-large">Agregar Miembro</h2>
+        <hr style="background-color: black; height: 3px;">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="mb-4">
+                <div class="d-grid gap-2 col-6 mx-auto mb-4">
+                    <!-- Botón para abrir el modal de Tomar Foto -->
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#cameraModal">
+                        Tomar Foto
+                        <i class="fa-solid fa-camera"></i>
+                    </button>
+    
+                    <!-- Botón para abrir el modal de registro de huella -->
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#fingerprintModal">
+                        <i class="bi bi-fingerprint"></i>
+                        Registrar Huella
+                        <i class="fa-solid fa-fingerprint"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- Colocamos este div fuera del contenedor w-100 para no estar dentro de la restricción de alineación a la derecha -->
+            <div class="w-20">
+                {% crispy form %}
+            </div>
+            <div class="mt-3 w-100 d-flex justify-content-between">
+                <a href="{% url 'miembros:lista_miembros' %}" class="btn btn-warning btn-lg" onclick="return confirm('¿Estás seguro de que quieres regresar? Los datos no guardados se perderán.');">
+                    <i class="fa-solid fa-backward"></i> Regresar
+                </a>
+                <button type="submit" class="btn btn-primary btn-lg">
+                    Guardar <i class="fa-solid fa-floppy-disk"></i>
+                </button>
+            </div>
+        </form>
+        <!-- Modal -->
+        <div class="modal fade" id="cameraModal" tabindex="-1" aria-labelledby="cameraModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="cameraModalLabel">Tomar Foto</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <video id="video" width="100%" autoplay></video>
+                        <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="snap" class="btn btn-primary">Capturar</button>
+                        <button type="button" id="repeat" class="btn btn-secondary">Repetir</button>
+                        <button type="button" id="accept" class="btn btn-success" disabled>Aceptar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal -->
+        <div class="modal fade" id="fingerprintModal" tabindex="-1" aria-labelledby="fingerprintModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="fingerprintModalLabel">Registro de Huella Digital</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Fila con flexbox para centrar todo el contenido -->
+                        <div class="row justify-content-center align-items-center">
+                            <!-- Columna para la imagen, usa 'col-auto' para que ajuste su ancho al contenido -->
+                            <div class="col-auto">
+                                <img src="{% static 'images/fingerprint2.png' %}" alt="Fingerprint" style="width: 100px; height: auto;">
+                            </div>
+                            <!-- Columna para los iconos, también 'col-auto' -->
+                            <div class="col-auto">
+                                <!-- Contenedor para los iconos de estado de registro -->
+                                <div class="d-flex flex-wrap justify-content-center" id="iconFinger">
+                                    <!-- Iconos de FontAwesome -->
+                                    <i class="icon far fa-times-circle fa-2x mx-1 my-1" id="iconFinger1"></i>
+                                    <i class="icon far fa-times-circle fa-2x mx-1 my-1" id="iconFinger2"></i>
+                                    <i class="icon far fa-times-circle fa-2x mx-1 my-1" id="iconFinger3"></i>
+                                </div>
+                            </div>
+                        </div>
+                        &nbsp;
+                        <div class="row justify-content-center align-items-center">
+                            Pide al miembro colocar su dedo en el sensor 3 veces
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-center align-items-center">
+                        <button id="startRegistration" class="btn btn-primary">
+                            Registrar
+                            <i class="fas fa-fingerprint"></i>
+                        </button>
+                        <button id="resetRegistration" class="btn btn-warning" disabled>
+                            Reiniciar
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </button>
+                        <button id="saveFingerprint" class="btn btn-success" disabled>
+                            Guardar
+                            <i class="fas fa-save"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>    
+    </div>
+</div>
+<script>
+$(document).ready(function() {
+    var video = document.getElementById('video');
+    var canvas = document.getElementById('canvas');
+    var context = canvas.getContext('2d');
+    var snapButton = document.getElementById('snap');
+    var repeatButton = document.getElementById('repeat');
+    var acceptButton = document.getElementById('accept');
+    var stream = null;  // Referencia al stream de video
+
+    // Iniciar la webcam cuando el modal se abre
+    $('#cameraModal').on('show.bs.modal', function (e) {
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function(s) {
+                stream = s;
+                video.srcObject = stream;
+                video.play();
+                // Reiniciar el estado de los botones cada vez que se abre el modal
+                snapButton.disabled = false;
+                acceptButton.disabled = true;
+                repeatButton.disabled = true;
+            })
+            .catch(function(err) {
+                console.log("An error occurred: " + err);
+            });
+    });
+
+    // Detener la webcam cuando el modal se cierra
+    $('#cameraModal').on('hidden.bs.modal', function (e) {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+        // Limpia el canvas y los datos de imagen cada vez que se cierra el modal
+        context.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+    // Capturar la foto
+    snapButton.addEventListener("click", function() {
+        // Ajustar el tamaño del canvas al del video.
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        var imageDataUrl = canvas.toDataURL('image/png'); // Convierte a base64.
+
+        var imageDataField = document.querySelector('input[name="image_data"]');
+        if (imageDataField) {
+            imageDataField.value = imageDataUrl; // Asigna a campo oculto.
+        } else {
+            console.error('El campo oculto para la imagen no se encontró.');
+        }
+
+        acceptButton.disabled = false; // Habilita botón Aceptar.
+        repeatButton.disabled = false; // Habilita botón Repetir.
+        snapButton.disabled = true; // Deshabilita botón Capturar.
+
+        video.style.display = 'none'; // Oculta el video.
+        canvas.style.display = 'block'; // Muestra el canvas.
+
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop()); // Detiene la webcam.
+        }
+    });
+
+    // Repetir la captura
+    repeatButton.addEventListener("click", function() {
+        context.clearRect(0, 0, canvas.width, canvas.height); // Limpia el canvas.
+        video.style.display = 'block'; // Muestra el video.
+        canvas.style.display = 'none'; // Oculta el canvas.
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function(s) {
+                stream = s;
+                video.srcObject = stream;
+                video.play();
+
+                snapButton.disabled = false; // Habilita botón Capturar.
+                acceptButton.disabled = true; // Deshabilita botón Aceptar hasta nueva captura.
+                repeatButton.disabled = true; // Deshabilita botón Repetir hasta capturar.
+            })
+            .catch(function(err) {
+                console.log("An error occurred: " + err);
+            });
+    });
+
+
+    // Aceptar la foto capturada
+    acceptButton.addEventListener("click", function() {
+        $('#cameraModal').modal('hide');
+    });
+
+    // Verificar si la foto ha sido capturada antes de permitir el envío del formulario
+    $('form').on('submit', function(event) {
+        var imageDataField = document.getElementsByName('image_data')[0].value;
+        var fingerprintDataField = document.getElementsByName('fingerprint_data')[0].value;
+        if (!imageDataField) {
+            event.preventDefault(); // Evita que el formulario se envíe
+            alert('Por favor, capture una foto antes de guardar.');
+            $('#cameraModal').modal('show'); // Muestra el modal de captura de foto
+        }
+        if (!fingerprintDataField) {
+            event.preventDefault(); // Evita que el formulario se envíe
+            alert('Por favor, capture una huella antes de guardar.');
+            $('#fingerprintModal').modal('show'); // Muestra el modal de captura de foto
+        }
+    });
+
+    // Modal Fingerprint
+    document.getElementById('startRegistration').addEventListener('click', function() {
+        // Deshabilita el botón de Iniciar Registro para evitar múltiples clics
+        this.disabled = true;
+        // Realiza la solicitud AJAX al servidor para iniciar el registro de la huella
+        startFingerprintRegistration();
+    });
+
+    function startFingerprintRegistration() {
+        $.ajax({
+            url: "/miembros/registro-huella/",
+            method: "POST",
+            data: {
+                csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+                reset: false,
+            },
+            dataType: "json",
+            success: function(response) {
+                if (response.success) {
+                    // Actualiza los iconos de estado según la cantidad de huellas registradas
+                    updateRegistrationIcons(response.registeredCount);
+                    console.log(response.registeredCount)
+                    {% comment %} document.getElementById('resetRegistration').disabled = false; {% endcomment %}
+                    if(response.registeredCount < 3) {
+                        // Continúa con el proceso de registro si aún no se han capturado 4 huellas
+                        startFingerprintRegistration();
+                    } else {
+                        $('input[name="fingerprint_data"]').val(response.final_template);
+                        document.getElementById('saveFingerprint').disabled = false;
+                    }
+                } else {
+                    // Manejar errores o fallos en la captura
+                    console.log('Fallo en la captura');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("ERROR en la solicitud:", error);
+            },
+        });
+    }
+    
+    function updateRegistrationIcons(registeredCount) {
+        // Actualiza los iconos de registro según cuántas huellas se han registrado exitosamente
+        let icons = document.querySelectorAll('#iconFinger .icon');
+        console.log(icons)
+        icons.forEach((icon, index) => {
+            if(index < registeredCount) {
+                icon.className = 'icon fa-solid fa-check fa-2x mx-1 my-1';
+                console.log('si entre')
+            } else {
+                icon.className = 'icon far fa-times-circle fa-2x mx-1 my-1';
+                console.log('no entre')
+            }
+        });
+    }
+
+    document.getElementById('resetRegistration').addEventListener('click', function() {
+        this.disabled = true; // "this" se refiere al botón de Reiniciar
+        $.ajax({
+            url: "/miembros/registro-huella/", // URL para reiniciar la captura de huella
+            method: "POST",
+            data: {
+                csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+                reset: true,
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Reinicia los iconos a su estado original
+                    resetRegistrationIcons();
+                    
+                    // Habilita el botón de Iniciar Registro
+                    document.getElementById('startRegistration').disabled = false;
+                    
+                    // Deshabilita los botones de Guardar y Reiniciar hasta que se inicie un nuevo registro
+                    document.getElementById('saveFingerprint').disabled = true;
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("ERROR en la solicitud de reset:", error);
+            },
+        });
+    });
+    
+    function resetRegistrationIcons() {
+        let icons = document.querySelectorAll('#iconFinger .icon');
+        icons.forEach((icon) => {
+            icon.className = 'icon far fa-times-circle fa-2x mx-1 my-1';
+        });
+    }
+    
+    document.getElementById('saveFingerprint').addEventListener('click', function() {
+        $('#fingerprintModal').modal('hide');
+    }); 
+
+    
+});
+    document.addEventListener('DOMContentLoaded', function() {
+        // Obtén la URL actual sin el dominio
+        const path = window.location.pathname;
+
+        // Selecciona el enlace por su clase
+        const miembrosLink = document.querySelector('.members');
+
+        // Verifica si la URL actual contiene el path del enlace de acceso
+        if (miembrosLink && path.includes('/miembros/agregar/')) {
+            miembrosLink.classList.add('active');
+        }
+
+    });
+</script>
+{% endblock  %}

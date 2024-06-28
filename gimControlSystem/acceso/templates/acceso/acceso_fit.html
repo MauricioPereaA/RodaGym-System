@@ -1,0 +1,132 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpaceFit - Acceso</title>
+    <link rel="icon" type="image/png" href="{% static 'images/spacefit/SpaceFit_Mesa de trabajo 1.png' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'css/spacefit-gen-style.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js" integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI=" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://kit.fontawesome.com/5db734b90f.js" crossorigin="anonymous"></script>
+    <style>
+        .details-wrapper {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .global-message-container {
+            max-width: 430px;
+            margin-left: -80px; /* Espacio entre la imagen y el mensaje */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-content">
+        <div class="fit-container">
+            <div id="accesoStatic" class="accesoStaticCSS">
+                <!-- User Image Container -->
+                <div id="userImageContainer" class="user-image-container">
+                    <img src="{% static 'images/spacefit/spacegif.gif' %}" alt="User Image">
+                </div>
+                <!-- Wrapper for User Details to the Right of the Image -->
+                <div class="details-wrapper">
+                    <!-- Nombre del Usuario -->
+                    <div id="userNameContainer" class="user-detail-container">
+                        <p></p>
+                    </div>
+                    
+                    <!-- Contenedor Actividad -->
+                    <div id="userActivityContainer" class="user-detail-container">
+                        <p></p>
+                    </div>
+                    
+                    <!-- Contenedor Vigencia -->
+                    <div id="userExpiracyContainer" class="user-detail-container">
+                        <p></p>
+                    </div>
+                    
+                    <!-- Contenedor Status Puerta -->
+                    <div id="userStatusContainer" class="user-detail-container">
+                    </div>
+                </div>
+                <!-- Contenedor Mensaje Global -->
+                {% load markdownify %}
+                <div id="globalMessageContainer" class="global-message-container">
+                    {% if mensaje_global %}
+                        <div class="alert alert-info" role="alert">
+                            {{ mensaje_global|markdownify }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const accesoSocket = new WebSocket(
+            'ws://' + window.location.host + '/ws/acceso/'
+        );
+
+        console.log(accesoSocket)
+        accesoSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            console.log(data)
+
+            const globalMessageContainer = document.querySelector('#globalMessageContainer');
+            globalMessageContainer.style.display = 'none';  // Ocultar mensaje global
+
+            document.querySelector('#userImageContainer img').src = data.miembro_foto_url || "{% static 'path/to/default/image' %}";
+            document.querySelector('#userNameContainer').innerHTML = `<p>Nombre: <span class='h4 font-weight-bold'>${data.miembro_nombres} ${data.miembro_apellidos}</span></p>`;
+            document.querySelector('#userActivityContainer p').innerHTML = `<p>Actividad: <span class='h4 font-weight-bold'>${data.actividad}</span></p>`;
+            document.querySelector('#userExpiracyContainer p').innerHTML = `<p>Vigencia: <span class='h5 font-weight-bold'>${data.vigencia}</span></p>`;
+            if(data.estatus_membresia === 'Activa'){
+                document.querySelector('#userStatusContainer').innerHTML = 
+                                `<p style="display: inline;">Estatus Membresia: </p><h2 style="display: inline;"><span class='badge rounded-pill bg-success'>${data.estatus_membresia}</span></h2>`;
+            } else {
+                document.querySelector('#userStatusContainer').innerHTML = 
+                                `<p style="display: inline;">Estatus Membresia: </p><h2 style="display: inline;"><span class='badge rounded-pill bg-danger'>${data.estatus_membresia}</span></h2>`;              
+            }
+
+            setTimeout(function() {
+                document.querySelector('#userImageContainer img').src = "{% static 'images/spacefit/spacegif.gif' %}";
+                document.querySelector('#userNameContainer').innerHTML = "";
+                document.querySelector('#userActivityContainer p').innerHTML = "";
+                document.querySelector('#userExpiracyContainer p').innerHTML = "";
+                document.querySelector('#userStatusContainer').innerHTML = "";
+                globalMessageContainer.style.display = 'block';
+            }, 10000);
+
+        };
+
+        accesoSocket.onopen = function(e) {
+            console.log('WebSocket is connected.');
+        };
+
+        accesoSocket.onerror = function(e) {
+            console.error('WebSocket encountered error: ', e);
+        };
+        accesoSocket.onclose = function(e) {
+            console.error('Chat socket closed unexpectedly');
+        };
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Obtén la URL actual sin el dominio
+            const path = window.location.pathname;
+    
+            // Selecciona el enlace por su clase
+            const accesoLink = document.querySelector('.access-control');
+    
+            // Verifica si la URL actual contiene el path del enlace de acceso
+            if (accesoLink && path.includes('/acceso/')) {
+                accesoLink.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>

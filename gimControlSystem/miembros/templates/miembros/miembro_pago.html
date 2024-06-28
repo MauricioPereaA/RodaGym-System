@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+{% load static %}
+  
+{% block content %}
+    <div class="main-content">
+        <div class="container-fluid">
+            <h2>Detalle de pago para {{ miembro.nombres }} {{ miembro.apellidos }}</h2>
+            <input type="hidden" id="miembroId" value="{{ miembro_id }}">
+            <input type="hidden" id="costoId" value="{{ costo_total }}">
+            <input type="hidden" id="costoIdFijo" value="{{ costo_total }}">
+            <input type="hidden" id="costoDescuentoId" value="{{ costo_total }}">
+            <input type="hidden" id="duracionId" value="{{ duracion }}">
+            <input type="hidden" id="costoInscripcion" value="{{ costo_inscripcion }}">
+            <hr style="background-color: white; height: 3px;">
+
+            <!-- Wrapper box with black background, centered -->
+            <div style="background-color: black; width: 544px; margin: auto; padding: 20px; color: white; border-radius: 10px">
+                <!-- Image frame container aligned to the center -->
+                <div style="text-align: center;">
+                    <img src="{{ imagen_url }}" alt="Placeholder Image" style="border-radius: 10px; width: 150px; height: 120px">
+                </div>
+                
+                <div style="text-align: left; margin-top: 20px;">
+                    <p>Actividad: <span class="h5 font-weight-bold">{{ actividad }}</span></p>
+                </div>
+                
+                <div style="text-align: left; margin-top: 10px;">
+                    <p>Costo: <span class="h5 font-weight-bold">{{ costo_actividad }}</span></p>
+                    {% if inscripcion %}
+                    <p>Membresía: <span class="h5 font-weight-bold">{{ costo_inscripcion }}</span></p>
+                    {% if user.is_staff %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="checkboxInscripcion" checked>
+                        <label class="form-check-label" for="checkboxInscripcion">Inscripción</label>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                    <div class="input-group input-group-sm mb-3" style="width:200px;">
+                        <div class="form-floating">
+                            <input class="form-control" id="floatingInputDescuento" placeholder="Descuento" value="0">
+                            <label for="floatingInputDescuento">Descuento</label>
+                        </div>
+                        <span class="input-group-text"><i class="fa-solid fa-percent"></i></span>
+                        <button type="button" id="btnAplicarDescuento" class="btn btn-primary btn-primary-action" style="color: black">
+                            Aplicar
+                            <i class="fa-solid fa-check-double"></i>
+                        </button>
+                    </div>
+                    <p>Costo Total: <span style="color: #A6F506;"id="costoTotalSpan"class="h5 font-weight-bold">{{ costo_total }}</span></p>
+                </div>
+                
+                <!-- Checkboxes stacked vertically -->
+                <div style="margin-top: 20px;">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="optionRadios" id="pagarEfectivo" value="Efectivo" checked>
+                        <label class="form-check-label" for="option1">Efectivo</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="optionRadios" id="pagarTarjeta" value="Tarjeta">
+                        <label class="form-check-label" for="option2">Tarjeta Crédito/Débito</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="optionRadios" id="pagarTransfer" value="Transferencia">
+                        <label class="form-check-label" for="option3">Transferencia Bancaria</label>
+                    </div>
+                </div>
+                
+                <!-- Floating input fields -->
+                <div style="margin-top: 20px; color: black;">
+                    <div class="input-group input-group-sm mb-3" style="width:200px;">
+                        <span class="input-group-text"><i class="fa-solid fa-dollar-sign"></i></span>
+                        <div class="form-floating">
+                            <input class="form-control" id="floatingInputCantidad" placeholder="Cantidad Recibida">
+                            <label for="floatingInputCantidad">Cantidad Recibida</label>
+                        </div>
+                    </div>
+                    <fieldset disabled>
+                        <div class="input-group input-group-sm mb-3" style="width:200px;">
+                            <span class="input-group-text"><i class="fa-solid fa-dollar-sign"></i></span>
+                            <div class="form-floating">
+                                <input class="form-control" id="floatingInputCambio" placeholder="Cambio" disable="True">
+                                <label for="floatingInputCambio">Cambio</label>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+                
+                <!-- "Aplicar" Button aligned to the left -->
+                <div style="text-align: left; margin-top: 20px;">
+                    <button type="button" id="btnAplicar" class="btn btn-primary btn-primary-action" style="color: black">
+                        Aplicar
+                        <i class="fa-solid fa-check-double"></i>
+                    </button>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button type="button" id="btnPagar" class="btn btn-primary btn-primary-action" style="width: 100%; color:black">
+                            Pagar
+                            <i class="fa-solid fa-cart-shopping"></i>
+                        </button>
+                    </div>
+                </form>
+                <!-- "Pagar" Button that spans horizontally -->
+            </div>
+        </div>
+        <!-- Modal -->
+        <div class="modal fade" id="pagoSuccessModal" tabindex="-1" aria-labelledby="pagoModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="pagoModalLabel">Pago Realizado Correctamente</h5>
+                    </div>
+                    <div class="modal-body">
+                        El pago se ha aplicado correctamente.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="reimprimirTicket" class="btn btn-primary">Reimprimir Ticket</button>
+                        <button type="button" id="finalizarPago" class="btn btn-secondary" data-bs-dismiss="modal">Finalizar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const initialCostoTotal = parseFloat(document.getElementById('costoId').value);
+            const costoInscripcion = parseFloat(document.getElementById('costoInscripcion').value);
+
+            document.getElementById('btnAplicar').addEventListener('click', function() {
+                // Obtener los valores de los inputs
+                const cantidadRecibida = parseFloat(document.getElementById('floatingInputCantidad').value);
+            
+                // Calcular el cambio
+                let costoTotal = document.getElementById('costoDescuentoId').value;
+                const cambio = costoTotal - cantidadRecibida;
+
+                // Establecer el valor del campo de Cambio
+                document.getElementById('floatingInputCambio').value = cambio.toFixed(2); // A dos decimales
+            });
+
+            if (document.getElementById('checkboxInscripcion')) {
+                document.getElementById('checkboxInscripcion').addEventListener('change', function() {
+                    let costoTotal = initialCostoTotal;
+
+                    if (!this.checked) {
+                        costoTotal -= costoInscripcion;
+                    }
+
+                    document.getElementById('costoTotalSpan').textContent = `$${costoTotal.toFixed(2)}`;
+                    document.getElementById('costoId').value = costoTotal;
+                    document.getElementById('costoDescuentoId').value = costoTotal;
+                });
+            }
+        });
+
+        // Función para aplicar el descuento al costo total
+        document.getElementById('btnAplicarDescuento').addEventListener('click', function() {
+            const costo = document.getElementById('costoId').value;
+            const descuento = parseFloat(document.getElementById('floatingInputDescuento').value) || 0;
+            const descuentoTotal = (costo * (descuento / 100)).toFixed(2);
+            const costoTotalConDescuento = (costo - descuentoTotal).toFixed(2);
+
+            document.getElementById('costoTotalSpan').textContent = `$${costoTotalConDescuento} descuento de -$${descuentoTotal}`;
+            document.getElementById('costoDescuentoId').value = costoTotalConDescuento;
+        });
+
+        document.getElementById('btnPagar').addEventListener('click', function(event) {
+            const cantidadRecibida = document.getElementById('floatingInputCantidad').value;
+            const cambio = document.getElementById('floatingInputCambio').value;
+            const metodoPagoSeleccionado = Array.from(document.querySelectorAll('input[name="optionRadios"]')).some(radio => radio.checked);
+        
+            if (!cantidadRecibida || !cambio) {
+                event.preventDefault(); // Previene la acción por defecto
+                alert('Por favor, completa el campo de "Cantidad Recibida".');
+                return;
+            }
+        
+            if (!metodoPagoSeleccionado) {
+                event.preventDefault(); // Previene la acción por defecto
+                alert('Por favor, selecciona un método de pago.');
+                return;
+            }
+        
+            // Si todo es válido, procede con la lógica para enviar la información al backend
+            realizarPago(); // Función para manejar el envío de datos al backend
+        });
+        function realizarPago() {
+            const csrfToken = $('input[name="csrfmiddlewaretoken"]').val(); // Obtener el token CSRF del formulario
+            const miembroId = document.getElementById('miembroId').value; // Asegúrate de tener este input en tu HTML
+            const costo = document.getElementById('costoDescuentoId').value; // Asegúrate de tener este input en tu HTML
+            const cantidadRecibida = document.getElementById('floatingInputCantidad').value;
+            const descuento = document.getElementById('floatingInputDescuento').value;
+            const duracion = document.getElementById('duracionId').value;
+            const metodoPago = document.querySelector('input[name="optionRadios"]:checked').value;
+        
+            $.ajax({
+                url: '/miembros/procesar_pago/' + miembroId + '/',
+                method: 'POST',
+                data: {
+                    csrfmiddlewaretoken: csrfToken,
+                    miembroId: miembroId,
+                    costo: costo,
+                    cantidadRecibida: cantidadRecibida,
+                    descuento: descuento,
+                    metodoPago: metodoPago,
+                    duracion: duracion,
+                },
+                dataType: "json",
+                success: function(data) {
+                    if (data.success) {
+                        // Abrir modal de Bootstrap
+                        $('#pagoSuccessModal').modal({
+                            backdrop: 'static', // Evita cerrar el modal al hacer clic fuera de él
+                            keyboard: false // Evita cerrar el modal con la tecla ESC
+                          });
+                        $('#pagoSuccessModal').modal('show');
+                        // impresion ticket mediante view en django
+                        imprimirTicket();
+                    } else {
+                        // Lógica en caso de fallo
+                        alert('Error al procesar el pago. Por favor, inténtalo de nuevo.');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("ERROR en la solicitud:", error);
+                },
+            });
+        }
+
+        $('#reimprimirTicket').on('click', function() {
+            $.ajax({
+                url: '/miembros/reimprimir_ticket/',
+                method: 'GET',  // Cambia a POST si es necesario
+                success: function(response) {
+                    if(response.success) {
+                        alert('Ticket Reimpreso');
+                        // Cualquier lógica adicional aquí
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function() {
+                    alert('Error al intentar reimprimir el ticket.');
+                }
+            });
+        });
+
+        $('#finalizarPago').on('click', function() {
+            window.location.href = '/miembros/';
+        });
+
+        function imprimirTicket() {
+            const csrfToken = $('input[name="csrfmiddlewaretoken"]').val(); // Obtener el token CSRF del formulario
+            const miembroId = document.getElementById('miembroId').value; // Asegúrate de tener este input en tu HTML
+            const costo = document.getElementById('costoDescuentoId').value; // Asegúrate de tener este input en tu HTML
+            const cantidadRecibida = document.getElementById('floatingInputCantidad').value;
+            const cambio = document.getElementById('floatingInputCambio').value;
+            const duracion = document.getElementById('duracionId').value;
+            const metodoPago = document.querySelector('input[name="optionRadios"]:checked').value;
+            $.ajax({
+                url: '/miembros/imprimir_ticket/',
+                method: 'POST',
+                data: {
+                    csrfmiddlewaretoken: csrfToken,
+                    miembroId: miembroId,
+                    costo: costo,
+                    cantidadRecibida: cantidadRecibida,
+                    cambio: cambio,
+                    metodoPago: metodoPago,
+                    duracion: duracion,
+                },
+                dataType: "json",
+                success: function(data) {
+                    // Opcionalmente, gestiona la respuesta
+                },
+                error: function(error) {
+                    console.log('Error al intentar reimprimir el ticket:', error);
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Obtén la URL actual sin el dominio
+            const path = window.location.pathname;
+    
+            // Selecciona el enlace por su clase
+            const miembrosLink = document.querySelector('.members');
+    
+            // Verifica si la URL actual contiene el path del enlace de acceso
+            miembrosLink.classList.add('active');
+        });
+        
+    </script>
+{% endblock  %}

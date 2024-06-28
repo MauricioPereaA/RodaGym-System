@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="main-content">
+    <div class="container-fluid">
+        <h2 class="title-large">Reimprimir Ticket</h2>
+        <hr style="background-color: black; height: 3px;">
+
+        <!-- Wrapper box with black background, centered -->
+        <div style="background-color: black; width: 544px; margin: auto; padding: 20px; color: white; border-radius: 10px;">
+            <!-- Floating input fields -->
+                <div class="form-floating mb-3" style="color: black;">
+                    <input type="text" class="form-control" id="ticketId" placeholder="ID del Ticket">
+                    <label for="ticketId">ID del Ticket</label>
+                </div>
+            <!-- Button Container for aligning buttons -->
+            <form method="post">
+                {% csrf_token %}
+                <div style="display: flex; justify-content: space-between;">
+                    <!-- "Reimprimir" Button aligned to the right -->
+                    <button type="button" id="btnReimprimir" class="btn btn-primary-action" onclick="reimprimirTicket()">Reimprimir</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    function reimprimirTicket() {
+        var csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+        var ticketId = document.getElementById('ticketId').value;
+    
+        // Prepara los datos para enviar
+        var datos = {
+            'ticket_id': ticketId,
+            'csrfmiddlewaretoken': csrftoken
+        };
+
+        $.ajax({
+            url: '/configuraciones/reimprimir_ticket/',
+            method: 'POST',
+            data: datos,
+            dataType: "json",
+            success: function(data) {
+                if (data.success) {
+                    alert('Ticket reimpreso exitosamente');
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("ERROR en la solicitud:", error);
+            },
+        });
+    }
+</script>
+{% endblock %}

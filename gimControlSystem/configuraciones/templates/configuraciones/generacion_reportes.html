@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="main-content">
+    <div class="container-fluid">
+        <h2 class="title-large">Configuraciones</h2>
+        <hr style="background-color: black; height: 3px;">
+        
+        <!-- Sección para filtrar transacciones y miembros por fechas -->
+        <div style="background-color: black; padding: 20px; color: white; border-radius: 10px;">
+            <h4>Filtrar por Fechas</h4>
+            <form method="post" class="row g-3">
+                {% csrf_token %}
+                <div class="col-md-2">
+                    <label for="fecha_desde" class="form-label">Desde</label>
+                    <input type="date" class="form-control" id="fecha_desde" name="fecha_desde" style="width: 130px">
+                </div>
+                <div class="col-md-2">
+                    <label for="fecha_hasta" class="form-label">Hasta</label>
+                    <input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta" style="width: 130px">
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" id="filtro_transacciones" name="filtro_principal" value="transacciones" checked>
+                    <label class="form-check-label" for="filtro_transacciones">Transacciones</label>
+                    <div id="sub_filtros_transacciones" style="display: block;">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_transaccion" id="filtro_todas" value="todas" checked>
+                            <label class="form-check-label" for="filtro_todas">Todas</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_transaccion" id="filtro_ventas_general" value="ventas_general">
+                            <label class="form-check-label" for="filtro_ventas_general">Ventas General</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_transaccion" id="filtro_membresias" value="membresias">
+                            <label class="form-check-label" for="filtro_membresias">Membresías</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" id="filtro_inscripciones" name="filtro_principal" value="inscripciones">
+                    <label class="form-check-label" for="filtro_inscripciones">Inscripciones</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" id="filtro_inventario" name="filtro_principal" value="inventario">
+                    <label class="form-check-label" for="filtro_inventario">Inventario Actual</label>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Buscar</button>
+                    <button type="submit" name="exportar_excel" class="btn btn-secondary">Exportar Excel</button>
+                </div>
+            </form>
+            
+            {% if transacciones %}
+                &nbsp;
+                <h5>Transacciones:</h5>
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Fecha</th>
+                            <th scope="col">Usuario</th>
+                            <th scope="col">Cantidad</th>
+                            <th scope="col">Descripción</th>
+                            <th scope="col">Método de Pago</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaccion in transacciones %}
+                            <tr>
+                                <td>{{ transaccion.id }}</td>
+                                <td>{{ transaccion.fecha }}</td>
+                                <td>{{ transaccion.usuario.username }}</td>
+                                <td>{{ transaccion.cantidad }}</td>
+                                <td>{{ transaccion.descripcion }}</td>
+                                <td>{{ transaccion.metodo_pago }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+            
+            {% if miembros %}
+            &nbsp;
+                <h5>Inscripciones:</h5>
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Apellido</th>
+                            <th scope="col">Fecha de Inicio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for miembro in miembros %}
+                            <tr>
+                                <td>{{ miembro.id }}</td>
+                                <td>{{ miembro.nombres }}</td>
+                                <td>{{ miembro.apellidos }}</td>
+                                <td>{{ miembro.fecha_inicio_membresia }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+            {% if inventario %}
+            &nbsp;
+                <h5>Inventario Actual:</h5>
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Código de Barras</th>
+                            <th scope="col">Precio</th>
+                            <th scope="col">Total Bodega</th>
+                            <th scope="col">Tipo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in inventario %}
+                            <tr>
+                                <td>{{ item.id }}</td>
+                                <td>{{ item.nombre }}</td>
+                                <td>{{ item.codigo_barras }}</td>
+                                <td>{{ item.precio }}</td>
+                                <td>{{ item.total_bodega }}</td>
+                                <td>{{ item.tipo }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('filtro_transacciones').addEventListener('change', function() {
+        var subFiltros = document.getElementById('sub_filtros_transacciones');
+        if (this.checked) {
+            subFiltros.style.display = 'block';
+        } else {
+            subFiltros.style.display = 'none';
+        }
+    });
+
+    document.getElementById('filtro_inscripciones').addEventListener('change', function() {
+        document.getElementById('sub_filtros_transacciones').style.display = 'none';
+    });
+
+    document.getElementById('filtro_inventario').addEventListener('change', function() {
+        document.getElementById('sub_filtros_transacciones').style.display = 'none';
+    });
+
+    // Asegúrate de que los sub-filtros se muestren si la página se recarga y el radio button principal está seleccionado
+    if (document.getElementById('filtro_transacciones').checked) {
+        document.getElementById('sub_filtros_transacciones').style.display = 'block';
+    }
+</script>
+{% endblock %}

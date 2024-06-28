@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load static %}
+  
+{% block content %}
+<div class="main-content">
+    <div class="container-fluid">
+        <h2 class="title-large">Editar Producto</h2>
+        <hr style="background-color: black; height: 3px;">
+
+        <!-- Wrapper box with black background, centered -->
+        <div style="background-color: black; width: 544px; margin: auto; padding: 20px; color: white; border-radius: 10px color: black;">
+            <!-- Floating input fields -->
+            <div style="margin-bottom: 5px; color: white;">Nombre del Producto</div>
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="nombreProducto" placeholder="Nombre del Producto" value="{{ producto.nombre}}">
+                    <label for="nombreProducto">Nombre del Producto</label>
+                </div>
+            <div style="margin-bottom: 5px; color: white;">Código del Producto</div>
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="codigoProducto" placeholder="Código del Producto" value="{{ producto.codigo_barras}}">
+                    <label for="codigoProducto">Código del Producto</label>
+                </div>
+            <div style="margin-bottom: 5px; color: white;">Precio</div>
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="precioProducto" placeholder="Precio" value="{{ producto.precio}}">
+                    <label for="precioProducto">Precio</label>
+                </div>
+            <div style="margin-bottom: 5px; color: white;">Total Bodega</div>
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="totalBodega" placeholder="Total Bodega" value="{{ producto.total_bodega}}">
+                    <label for="totalBodega">Total Bodega</label>
+                </div>
+            <div style="margin-bottom: 5px; color: white;">Tipo de Producto</div>
+                <select class="form-select" id="TipoProducto" aria-label="Floating label select example">
+                    <option>Selecciona el tipo de producto</option>
+                    <option value="Venta" {% if producto.tipo == "Venta" %}selected{% endif %}>Venta</option>
+                    <option value="Insumo" {% if producto.tipo == "Insumo" %}selected{% endif %}>Insumo</option>
+                </select>
+                <label for="TipoProducto">Tipo de Producto</label>
+            
+            <!-- Button Container for aligning buttons -->
+            <form method="post" action="{% url 'inventario:editar_producto' producto.id %}">
+                {% csrf_token %}
+                <div style="display: flex; justify-content: space-between;">
+                    <!-- "Guardar" Button aligned to the right -->
+                    <button id="btnGuardar" class="btn btn-primary-action" style="color: black;">Guardar</button>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('btnGuardar').addEventListener('click', function(e) {
+        e.preventDefault(); // Prevenir el envío por defecto del formulario
+        enviarDatosProducto('{{ producto.id }}');
+    });
+    
+    function enviarDatosProducto(productoId) {
+        var csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        var nombreProducto = document.getElementById('nombreProducto').value;
+        var codigoProducto = document.getElementById('codigoProducto').value;
+        var precioProducto = document.getElementById('precioProducto').value;
+        var totalBodega = document.getElementById('totalBodega').value;
+        var tipoProducto = document.getElementById('TipoProducto').value;
+    
+        // Prepara los datos para enviar
+        var datos = {
+            'nombre': nombreProducto,
+            'codigo_barras': codigoProducto,
+            'precio': precioProducto,
+            'total_bodega': totalBodega,
+            'tipo': tipoProducto,
+            'productoId': productoId
+        };
+
+        $.ajax({
+            url: '/inventario/actualizar_producto/' + productoId + '/',
+            method: 'POST',
+            data: datos,
+            dataType: "json",
+            success: function(data) {
+                if (data.success) {
+                    alert('Producto actualizado exitosamente');
+                    window.location.href = '/inventario/';  // Asegúrate de usar la URL correcta
+                } else {
+                    // Lógica en caso de fallo
+                    alert('Error al procesar al guardar producto');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("ERROR en la solicitud:", error);
+            },
+        });
+    }
+    
+</script>
+{% endblock  %}

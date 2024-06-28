@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load static %}
+  
+{% block content %}
+<div class="main-content">
+    <div class="container-fluid">
+        <h2 class="title-large">Inventario</h2>
+
+        {% if user.is_staff %}
+        <!-- Buttons: Agregar Producto & Generar Reporte -->
+        <div style="margin-top: 20px; display: flex; gap: 20px;">
+            <button onclick="location.href='{% url 'inventario:agregar_producto' %}'"type="button" class="btn btn-primary btn-primary-action" style="border: 1px solid rgb(166, 245, 6); color: black;">+ Agregar Producto</button>
+        </div>
+        {% endif %}
+
+        <hr style="background-color: black; height: 3px; margin-top: 20px;">
+
+        <!-- Search Bars: Código & Producto -->
+        <div class="input-group">
+            <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <input type="search" class="form-control" placeholder="Buscar" aria-label="Buscar" id="search-input">
+        </div>
+
+        <!-- Inventory Table -->
+        <div style="background-color: black; padding: 20px; color: white; border-radius: 10px; margin-top: 20px;">
+            <table class="table table-dark table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">Código</th>
+                        <th scope="col">Producto</th>
+                        <th scope="col">Total Bodega</th>
+                        <th scope="col">Precio</th>
+                        {% if user.is_staff %}
+                        <th scope="col">Acción</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for producto in productos %}
+                    <tr>
+                        <td>{{ producto.codigo_barras }}</td>
+                        <td>{{ producto.nombre }}</td>
+                        <td>{{ producto.total_bodega }}</td>
+                        <td>${{ producto.precio }}</td>
+                        {% if user.is_staff %}
+                        <td>
+                            <a href="{% url 'inventario:editar_producto' producto.id %}" class="btn btn-primary-action">
+                                <i class="fa-solid fa-pencil"></i>
+                            </a>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">No hay productos registrados en el inventario.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% include "pagination.html" with page=page_obj %}
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        const searchInput = document.getElementById('search-input');
+        searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            const query = searchInput.value;
+            window.location.href = `{% url 'inventario:lista_inventario' %}?q=${query}`;
+        }
+    });
+    });
+</script>
+{% endblock  %}

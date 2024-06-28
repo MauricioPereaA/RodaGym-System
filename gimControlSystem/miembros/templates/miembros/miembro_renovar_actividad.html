@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% load static %}
+  
+{% block content %}
+    <div class="main-content">
+        <div class="container-fluid">
+            <h2 class="title-large">Renovacion de membresia para {{ miembro.nombres }} {{ miembro.apellidos }}</h2>
+            <hr style="background-color: black; height: 3px;">
+
+            <!-- Wrapper box with black background, centered -->
+            <div style="background-color: black; width: 655px; margin: auto; padding: 20px; color: white; border-radius: 10px">
+                <!-- Label and input field for "Actividad" -->
+                <form id="formularioActividad">
+                    {% csrf_token %}
+                    <label class="form-label">Ingresar Actividad</label>
+                    <div class="form-floating mb-3">
+                        <select class="form-select" id="actividadValue" name="actividad" aria-label="Actividad">
+                            <option selected>Seleccione una actividad</option>
+                            {% for actividad in actividades %}
+                                <option value="{{ actividad.id }}">{{ actividad.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                        <label for="actividadValue">Actividad</label>
+                    </div>
+
+                    <!-- Checkboxes for duration options -->
+                    <div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="actividadOption" id="duracionAnual" value="Anual">
+                            <label class="form-check-label" for="duracionAnual">Anual</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="actividadOption" id="duracionSemestral" value="Semestral">
+                            <label class="form-check-label" for="duracionSemestral">Semestral</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="actividadOption" id="duracionMensual" value="Mensual" checked>
+                            <label class="form-check-label" for="duracionMensual">Mensual</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="actividadOption" id="duracionQuincenal" value="Quincenal">
+                            <label class="form-check-label" for="duracionQuincenal">Quincenal</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="actividadOption" id="duracionSemanal" value="Semanal">
+                            <label class="form-check-label" for="duracionSemanal">Semanal</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="actividadOption" id="duracionDiario" value="Diario">
+                            <label class="form-check-label" for="duracionDiario">Diario</label>
+                        </div>
+                    </div>
+
+                    <!-- Label and date input field for "Fecha Inicio de Plan" -->
+                    <div class="mt-3">
+                        {% if user.is_staff %}
+                            <label for="fechaInicioPlan" class="form-label">Fecha de Inicio</label>
+                            <input type="date" class="form-control" id="fechaInicioValue" style="width:150px;">
+                        {% else %}
+                            <label for="fechaInicioPlan" class="form-label">Fecha de Inicio</label>
+                            <input type="date" class="form-control" id="fechaInicioValue" style="width:150px;" value="{{ fecha_hoy }}" readonly>
+                        {% endif %}
+                    </div>
+                
+                    <div class="mt-3" style="text-align: right;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <!-- "Anterior" Button aligned to the left -->
+                            <a href="{% url 'miembros:editar_miembro' miembro_id=miembro.id%}" class="btn btn-primary btn-secondary-action" onclick="return confirm('¿Estás seguro de que quieres regresar? Los datos no guardados se perderán.');">
+                                <i class="fa-solid fa-backward"></i> Regresar
+                            </a>
+                            <!-- Container for right-aligned elements -->
+                            <div style="display: flex; align-items: center; gap: 10px">
+                            
+                                <!-- "boton Guardar Cambios -->
+                                <button type="button" id="btnProcederPago" class="btn btn-primary-action" style="color: black; white-space: nowrap; min-width: 140px;">
+                                    Proceder al pago
+                                    <i class="fa-solid fa-bag-shopping"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>  
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.getElementById('btnProcederPago').addEventListener('click', function() {
+            var csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+            var actividad = document.getElementById('actividadValue').value;
+            var duracion = document.querySelector('input[name="actividadOption"]:checked').value;
+            var fechaInicio = document.getElementById('fechaInicioValue').value;
+            var miembro_id = {{ miembro.id }};
+            var miembro_fecha_fin_old = '{{ fecha_fin_old }}';
+            
+            // Validación básica
+            if (!actividad || !duracion || !fechaInicio) {
+                alert('Por favor, completa todos los campos.');
+                return;
+            }
+
+            // Utiliza jQuery AJAX
+            $.ajax({
+                url: '/miembros/actualizar_membresia/', 
+                type: 'POST',
+                data: {
+                    csrfmiddlewaretoken: csrftoken,
+                    actividad: actividad,
+                    duracion: duracion,
+                    fechaInicio: fechaInicio,
+                    miembroId: miembro_id,
+                    miembro_fin_old: miembro_fecha_fin_old,
+                },
+                success: function(data) {
+                    // Si todo sale bien, actualiza la imagen en la interfaz
+                    if(data.success) {
+                        window.location.href = '/miembros/miembro_pago/' + miembro_id;
+                    } else {
+                        alert('Hubo un problema al guardar los datos de la sesión.');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                }
+            });
+        
+        });
+    </script>
+{% endblock  %}

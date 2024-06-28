@@ -1,0 +1,354 @@
+@font-face {
+    font-family: 'SF Fourche';
+        src: url('/path/to/SF-Fourche.woff2') format('woff2'), /* Modern Browsers */
+         url('/path/to/SF-Fourche.woff') format('woff'), /* Older Browsers */
+         url('/path/to/SF-Fourche.ttf') format('truetype'); /* Fallback for very old browsers */
+         /* FALTA CAMBIAR PATH REAL EN IMPLEMENTACION */
+    font-weight: 400;
+    font-style: normal;
+}
+/* Estilos personalizados */
+    body {
+    background-color: #727272;
+    font-family: 'Roboto', sans-serif;
+    overflow-x: hidden;
+}
+
+    .title-large {
+        font-family: 'SF Fourche', sans-serif;
+        font-size: 33px;
+    }
+
+    .title-medium {
+        font-family: 'SF Fourche', sans-serif;
+        font-size: 20px;
+    }
+
+    .miembros-button-margin {
+        margin-bottom: 20px;
+    }
+    
+    
+    .app-button:hover {
+        background-color: #F50695; 
+        color: white; 
+    }
+    
+    .btn-primary-action {
+        color: white;
+        background-color: #A6F506; 
+        border-color: #A6F506; 
+    }
+    
+    .btn-primary-action:hover {
+        background-color: #F50695; 
+        border-color: #F50695; 
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+    }
+    
+    .btn-secondary-action {
+        color: white;
+        background-color: #F50695; /* Pink */
+        border-color: #F50695;
+    }       
+    
+    #sidebar {
+        height: 100vh;
+        width: 250px;
+        position: fixed;
+        z-index: 1;
+        top: 0;
+        left: 0;
+        background-color: #111;
+        overflow-x: hidden;
+        padding-top: 20px;
+        padding-left: 20px;
+        color: #FFF;
+        font-family: 'SF Fourche', sans-serif; /* Fallback to sans-serif if custom font fails to load */
+        font-size: 20px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        text-transform: capitalize;
+        display: block;
+        z-index: 1000;
+        }
+
+    #sidebar .logo {
+        font-size: 30px;
+        color: #f1f1f1;
+        text-align: center;
+        margin-bottom: 20px;
+        font-weight: bold;
+        display: block;
+        text-transform: uppercase;
+    }
+    
+    .sidebar-link.active, .sidebar-link:hover {
+        color: #A6F506 !important;
+    }
+
+    #sidebar a {
+    padding: 6px 8px;
+    margin-bottom: 24px; 
+    text-decoration: none;
+    color: #818181;
+    display: block; 
+    }
+
+    #sidebar a:hover {
+    color: #F50695;
+    }
+
+    .sidebar-link {
+    display: flex;
+    align-items: center;
+    /*padding: 6px 8px;*/
+    }
+
+    .sidebar-icon {
+     width: 20px; /* Adjust the width as needed */
+     height: 20px; /* Adjust the height as needed */
+    /* margin-right: 5px; /* Space between the icon and the text */
+    }
+
+
+    #dynamic-main-content {
+        margin-left: 250px; 
+        padding: 20px; 
+        margin-top: 60px;
+        padding-top: 20px; 
+    }
+
+
+    #topbar {
+    overflow: hidden;
+    background-color: #000000;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 60px;
+    padding-top: 18px;
+    }
+
+    #topbar-right {
+    float: right;
+    color: #f2f2f2;
+    padding: 14px 16px;
+    text-decoration: none;
+    }
+
+    #topbar-right:hover {
+    background-color: #ddd;
+    color: black;
+    }
+
+    #topbar-right-icon {
+        width: 20px; /* Adjust the width as needed */
+        height: 20px; /* Adjust the height as needed */
+       /* margin-right: 5px; /* Space between the icon and the text */
+       }
+
+    .content {
+    padding: 20px;
+    margin-top: 80px; /* Ajustado para evitar la colisión con la top bar */
+    }
+
+    .table th, .table td {
+    vertical-align: middle;
+    }
+
+    .add-member-btn {
+    margin-bottom: 15px;
+    }
+
+    .led {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin: 5px;
+    }
+
+    .led.red {
+    background-color: red;
+    }
+
+    .led.green {
+    background-color: green;
+    }
+
+    .user-card p {
+    color: #441bca;
+    margin: 5px 0;
+    }
+    
+    .user-detail-container {
+        margin: 10px 0;
+        color: #FFFFFF;
+    }
+
+    .fit-container {
+        width: 854px;
+        max-width: 100%;
+        height: 487px;
+        display: flex;
+        flex-direction: row; /* Cambio a row para que la imagen y los detalles estén uno al lado del otro */
+        justify-content: space-around; /* Ajustar según necesidad */
+        align-items: center;
+        background-color: #333; /* O el color de fondo que prefieras para el contenedor */
+        border-radius: 70px; /* Opcional: para bordes redondeados */
+        padding: 20px;
+        box-sizing: border-box;
+    }
+    
+    .accesoStaticCSS {
+        display: flex; 
+        width: 100%; /* Ajusta al 100% del contenedor padre */
+        height: 100%; /* Ajusta al 100% del contenedor padre */
+        align-items: center; 
+    }
+    
+    .user-image-container img {
+        width: 360px;
+        height: 300px;
+        border-radius: 10%; 
+    }
+    
+    .details-wrapper {
+        display: flex;
+        flex-direction: column;
+        margin-left: 50px;
+        margin-right: 50px;
+    }
+
+    /* DIRECTORIO DE MIEMBROS CSS */
+    .custom-search-bar {
+        display: flex;
+        width: 754px;
+        height: 51px;
+        padding: 5px 20px;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 10px;
+        border: 1px solid black; 
+        background-color: white; 
+    }
+    
+    .custom-search-bar .input-group {
+        display: flex;
+        width: 100%;
+        align-items: center;
+    }
+    
+    .custom-search-bar .form-control {
+        border: none;
+        box-shadow: none;
+    }
+    
+    .custom-search-bar .input-group-text {
+        background-color: transparent;
+        border: none;
+        color: #A6F506; 
+    }
+    
+    
+    .bi-search {
+        color: #A6F506; 
+    }   
+    
+    .app-edit-btn {
+        color: white; 
+        background-color: #A6F506; 
+        border-color: #A6F506; 
+      }
+      
+      .app-edit-btn:hover {
+        background-color: darken(#A6F506, 10%); 
+        border-color: darken(#A6F506, 10%);
+      }
+      
+      .app-delete-btn {
+        color: white; 
+        background-color: #F50695; 
+        border-color: #F50695; 
+      }
+      
+      .app-delete-btn:hover {
+        background-color: darken(#F50695, 10%); 
+        border-color: darken(#F50695, 10%);
+      }
+
+      .app-edit-btn {
+        color: white;
+        background-color: #A6F506; 
+        border-color: #A6F506; 
+      }
+      
+      .app-edit-btn:hover {
+        background-color: darken(#A6F506, 10%); 
+        border-color: darken(#A6F506, 10%);
+      }
+      
+      .app-delete-btn {
+        color: white; 
+        background-color: #F50695;
+        border-color: #F50695; 
+      }
+      
+      .app-delete-btn:hover {
+        background-color: darken(#F50695, 10%); 
+        border-color: darken(#F50695, 10%);
+      }
+      
+    .button-container {
+        display: flex;
+        gap: 5px; 
+    }
+    
+    /* CUSTOM WIDTH PARA AGREGAR MIEMBROS INPUT FIELDS */
+   .addmem-custom-margin {
+    margin-left: 180px; 
+    }
+   
+    /* add_member.html */
+    .form-navigation-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .form-submit-container {
+        text-align: right; 
+    }
+    
+    .btn-custom {
+        color: rgb(166, 245, 6);
+        border: 1px solid rgb(166, 245, 6);
+        width: 24px;
+        height: 10px;
+        padding: 0; /* Adjust padding to fit content */
+        line-height: 10px; /* Adjust line height to vertically center "-" and "+" */
+    }
+    .btn-custom:hover {
+        background-color: #007bff; /* Bootstrap's blue */
+        color: white;
+    }
+    #page-content-wrapper {
+        min-width: 0vw;
+        width: 80%;
+    }
+    #canvas {
+        width: 100%; /* Esto hace que el canvas se ajuste al ancho del contenedor del modal */
+        height: auto; /* Esto asegura que la altura se ajuste automáticamente manteniendo la proporción de aspecto */
+        max-width: 640px; /* O el ancho máximo del video */
+        display: none; /* Inicialmente oculto, se muestra después de capturar la imagen */
+    }
+    
+    /* Asegúrate de que el contenedor del video tenga el mismo ancho máximo */
+    #video {
+        max-width: 640px; /* O el ancho máximo que prefieras */
+    }
+    legend.form-label{
+        font-size: large;
+    }

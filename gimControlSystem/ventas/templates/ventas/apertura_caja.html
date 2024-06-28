@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load static %}
+  
+{% block content %}
+<div class="main-content">
+    <div class="container-fluid">
+        <h2 class="title-large">Apertura de Caja</h2>
+        <hr style="background-color: black; height: 3px;">
+
+        <!-- Wrapper box with black background, centered -->
+        <div style="background-color: black; width: 544px; margin: auto; padding: 20px; color: white; border-radius: 10px;">
+            <form method="post">
+                {% csrf_token %}
+                <!-- Floating input fields -->
+                <div style="margin-bottom: 5px; color: white;">Total en Caja</div>
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="totalEnCaja" name="total_en_caja" placeholder="Total en Caja" required>
+                    <label for="totalEnCaja">Total en Caja</label>
+                </div>
+                <div style="margin-bottom: 5px; color: white;">Descripción</div>
+                <div class="form-floating mb-3">
+                    <textarea class="form-control" id="descripcion" name="descripcion" placeholder="Descripción"></textarea>
+                    <label for="descripcion">Descripción</label>
+                </div>
+                <!-- Button Container for aligning buttons -->
+                <div style="display: flex; justify-content: space-between;">
+                    <!-- "Guardar" Button aligned to the right -->
+                    <button type="submit" class="btn btn-primary-action">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

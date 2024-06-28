@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% load static %}
+  
+{% block content %}
+<div class="main-content">
+    <div class="container-fluid">
+        <h2 class="title-large">Corte de Caja</h2>
+        <hr style="background-color: black; height: 3px;">
+
+        <!-- Mensajes de error -->
+        {% if messages %}
+        <div class="alert alert-danger" role="alert">
+            {% for message in messages %}
+            {{ message }}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div style="display: flex; gap: 20px; justify-content: center;">
+            <!-- Wrapper box with black background, centered -->
+            <div style="background-color: black; width: 544px; padding: 20px; color: white; border-radius: 10px;">
+                {% if caja %}
+                    <h4>Resumen de Transacciones</h4>
+                    <p>Total Efectivo: ${{ total_efectivo }}</p>
+                    <p>Total Tarjeta: ${{ total_tarjeta }}</p>
+                    <p>Total Transferencia: ${{ total_transferencia }}</p>
+                    <hr style="background-color: white; height: 2px;">
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="totalEfectivoReal">Total Efectivo Real</label>
+                            <input type="text" class="form-control" id="totalEfectivoReal" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="faltante">Faltante</label>
+                            <input type="text" class="form-control" id="faltanteEfectivo" readonly>
+                        </div>
+                        <hr style="background-color: white; height: 2px;">
+                        <div class="form-group">
+                            <label for="totalEfectivoReal">Total Tarjeta Real</label>
+                            <input type="text" class="form-control" id="totalTarjetaReal" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="faltante">Faltante</label>
+                            <input type="text" class="form-control" id="faltanteTarjeta" readonly>
+                        </div>
+                        <hr style="background-color: white; height: 2px;">
+                        <div class="form-group">
+                            <label for="totalEfectivoReal">Total Transferencia Real</label>
+                            <input type="text" class="form-control" id="totalTransferenciaReal" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="faltante">Faltante</label>
+                            <input type="text" class="form-control" id="faltanteTransferencia" readonly>
+                        </div>
+                        <div style="text-align: center; margin-top: 20px;">
+                            <button type="button" id="btnCuadrar" class="btn btn-secondary btn-primary-action">
+                                Cuadrar
+                            </button>
+                            <button type="submit" id="btnCortar" class="btn btn-primary btn-primary-action" disabled>
+                                Cortar
+                            </button>
+                        </div>
+                    </form>
+                {% else %}
+                    <p>No hay una caja abierta actualmente. Por favor, abra una caja primero.</p>
+                {% endif %}
+            </div>
+
+            <!-- Wrapper box for transaction details -->
+            {% if caja %}
+                <div style="background-color: black; width: 544px; padding: 20px; color: white; border-radius: 10px;">
+                    <h4>Detalles de Transacciones</h4>
+                    <table class="table table-dark table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">Fecha</th>
+                                <th scope="col">Tipo</th>
+                                <th scope="col">Cantidad</th>
+                                <th scope="col">Descripción</th>
+                                <th scope="col">Método de Pago</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaccion in transacciones %}
+                            <tr>
+                                <td>{{ transaccion.fecha }}</td>
+                                <td>{{ transaccion.tipo }}</td>
+                                <td>${{ transaccion.cantidad }}</td>
+                                <td>{{ transaccion.descripcion }}</td>
+                                <td>{{ transaccion.metodo_pago }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('btnCuadrar').addEventListener('click', function() {
+        const totalEfectivo = {{ total_efectivo }};
+        const totalEfectivoReal = parseFloat(document.getElementById('totalEfectivoReal').value);
+        const totalTarjeta = {{ total_tarjeta }};
+        const totalTarjetaReal = parseFloat(document.getElementById('totalTarjetaReal').value);
+        const totalTransferencia = {{ total_transferencia }};
+        const totalTransferenciaReal = parseFloat(document.getElementById('totalTransferenciaReal').value);
+
+        if (isNaN(totalEfectivoReal) || totalEfectivoReal < 0) {
+            alert('Por favor, ingrese un valor válido para el Total Efectivo Real.');
+            return;
+        }
+        if (isNaN(totalTarjetaReal) || totalTarjetaReal < 0) {
+            alert('Por favor, ingrese un valor válido para el Total Efectivo Real.');
+            return;
+        }
+        if (isNaN(totalTransferenciaReal) || totalTransferenciaReal < 0) {
+            alert('Por favor, ingrese un valor válido para el Total Efectivo Real.');
+            return;
+        }
+
+        const faltanteEfectivo = totalEfectivo - totalEfectivoReal;
+        document.getElementById('faltanteEfectivo').value = faltanteEfectivo.toFixed(2);
+        
+        const faltanteTarjeta = totalTarjeta - totalTarjetaReal;
+        document.getElementById('faltanteTarjeta').value = faltanteTarjeta.toFixed(2);
+        
+        const faltanteTransferencia = totalTransferencia - totalTransferenciaReal;
+        document.getElementById('faltanteTransferencia').value = faltanteTransferencia.toFixed(2);
+
+        document.getElementById('btnCortar').disabled = false;
+    });
+
+    document.getElementById('corteCajaForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        // Aquí iría la lógica para realizar el corte de caja
+        const totalEfectivoReal = document.getElementById('totalEfectivoReal').value;
+
+        $.ajax({
+            url: "{% url 'ventas:corte_caja' %}",
+            method: "POST",
+            data: {
+                csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val(),
+                total_efectivo_real: totalEfectivoReal,
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert('Corte de caja realizado correctamente.');
+                    window.location.reload();
+                } else {
+                    alert('Error al realizar el corte de caja.');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error en la solicitud:", error);
+                alert('Error al realizar el corte de caja.');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
